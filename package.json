@@ -1,0 +1,27 @@
+{
+  "name": "node-file-server",
+  "version": "1.0.0",
+  "description": "nodejs编写的文件服务器（File server written by nodejs.）",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "browser-sync": "^2.18.8",
+    "formidable": "^1.1.1",
+    "gulp": "^3.9.1",
+    "jquery": "^3.2.1",
+    "require-dir": "^0.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gemuandyou/node-file-server.git"
+  },
+  "author": "gemu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gemuandyou/node-file-server/issues"
+  },
+  "homepage": "https://github.com/gemuandyou/node-file-server#readme"
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>服务器首页</title>
+    <style type="text/css">
+        .file-tr :hover {
+            background-color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <form id='upload-form' method='post' action='/api/uploadForm/' enctype='multipart/form-data'>
+        图片路径：<input name="filePath" type='text'/>
+        选择图片：<input name="file" type='file'/>
+        <input type='submit' value='提交'/>
+    </form>
+    <hr>
+    <div>
+        <table style="min-width: 400px; line-height: 2; border: 1px solid gainsboro;">
+            <tbody class="file-struct">
+            </tbody>
+        </table>
+    </div>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script type="application/javascript">
+        function getStruct(path) {
+            $.ajax({
+                type: 'get',
+                url: '/assetsStruct' + path,
+                dataType: 'json',
+                success: function(data) {
+                    var prePath = path.substring(0, path.lastIndexOf('/'));
+                    var trHtml = '<tr class="file-tr" onclick="getStruct(\'' + prePath + '\')"><td class="col-md-12"><a href="javascript:;">上级目录</a></td></tr>';
+                    if (data instanceof Array) {
+                        for (var i = 0; data && i < data.length; i++) {
+                            var currPath = path + '/' + data[i];
+                            trHtml += '<tr class="file-tr" onclick="getStruct(\'' + currPath + '\')"><td class="col-md-12"><a href="javascript:;">' + data[i] + '</a></td></tr>'
+                        }
+                        $('.file-struct').html(trHtml);
+                    } else if (typeof data == 'object') {
+                        window.open(data.file);
+                    }
+                }
+            });
+        }
+        getStruct("");
+    </script>
+</body>
+</html>
