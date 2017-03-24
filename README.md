@@ -19,6 +19,6 @@ gulp server
   http://gemuandyou:3000/api/upload/
   ```
 * 资源下载
-  ```
+  ```
   http://gemuandyou:3000/download/assets/xxx/xx.jpg
   ```
