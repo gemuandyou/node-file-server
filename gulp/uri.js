@@ -58,7 +58,7 @@ module.exports = [{
         var path = 'src/assets' + req.url;
         var stats = fs.statSync(decodeURI(path));
         if (stats.isDirectory()) {
-            var files = getChildrenFile(path);
+            var files = getChildrenFile(decodeURI(path));
             if (files) {
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.write(JSON.stringify(files).toString())
@@ -86,11 +86,11 @@ module.exports = [{
         var path = req.url;
         var fileName = path.substring(path.lastIndexOf('/') + 1);
         var filePath = 'src/assets' + path;
-        var stats = fs.statSync(filePath);
+        var stats = fs.statSync(decodeURI(filePath));
         if (stats.isFile()) {
             res.setHeader("Content-type", "application/octet-stream");
             res.setHeader("Content-Disposition", "attachment;filename="+encodeURI(fileName));
-            var filestream = fs.createReadStream(filePath);
+            var filestream = fs.createReadStream(decodeURI(filePath));
             filestream.on('data', function(chunk) {
                 res.write(chunk);
             });
