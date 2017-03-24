@@ -56,7 +56,7 @@ module.exports = [{
     route: "/assetsStruct", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {
         var path = 'src/assets' + req.url;
-        var stats = fs.statSync(path);
+        var stats = fs.statSync(decodeURI(path));
         if (stats.isDirectory()) {
             var files = getChildrenFile(path);
             if (files) {
