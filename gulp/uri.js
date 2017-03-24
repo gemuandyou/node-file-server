@@ -22,7 +22,7 @@ module.exports = [{
             if (files && fields.filePath && files.file) {
                 var filePath = file.writeFileFromForm(fields.filePath, files.file);
                 res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                res.write(filePath);
+                res.write(filePath, 'utf-8');
             }
             res.end();
         });
@@ -47,7 +47,7 @@ module.exports = [{
             var buffer = new Buffer(params['fileBuffer'], 'hex');
             var filePath = file.writeFile(decodeURI(params['filePath']), decodeURI(params['fileName']), buffer);
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-            res.write(filePath);
+            res.write(filePath, 'utf-8');
             res.end();
         });
     }
