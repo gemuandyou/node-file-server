@@ -20,9 +20,15 @@ module.exports = [{
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
             if (files && fields.filePath && files.file) {
-                var filePath = file.writeFileFromForm(fields.filePath, files.file);
-                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                res.write(filePath, 'utf-8');
+                // 域名验证，允许跨域访问白名单
+                if ("http://192.168.1.154:1337" == req.headers["origin"]) {
+                    var filePath = file.writeFileFromForm(fields.filePath, files.file);
+                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                    res.setHeader('Access-Control-Allow-Origin', '');
+                    res.setHeader('Access-Control-Allow-Methods', 'POST');
+                    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
+                    res.write(filePath, 'utf-8');
+                }
             }
             res.end();
         });
