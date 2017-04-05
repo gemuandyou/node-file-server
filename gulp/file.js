@@ -47,11 +47,15 @@ module.exports = {
         return filePath + file.name;
     },
     writeFile: function(filePath, fileName, fileBuffer) {
-        filePath = 'src/assets/' + filePath;
-        if (filePath.lastIndexOf('/') != filePath.length - 1) {
-            filePath += '/';
+        if (filePath) {
+            filePath = 'src/assets/' + filePath;
+            if (filePath.lastIndexOf('/') != filePath.length - 1) {
+                filePath += '/';
+            }
+            mkdirs(filePath);
+        } else {
+            filePath = 'src/assets/';
         }
-        mkdirs(filePath);
         if (fs.existsSync(decodeURI(filePath + fileName))) {
             fs.appendFileSync(decodeURI(filePath + fileName), fileBuffer);
         } else {
