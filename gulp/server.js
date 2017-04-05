@@ -7,6 +7,7 @@ var uri = require('./uri');
 gulp.task('server', function () {
     browserSync.init({
         browser: 'chrome',
+        port: '3008',
         server: {
             baseDir: 'src',
             routes: {
