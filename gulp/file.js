@@ -33,11 +33,15 @@ var mkdirs = function (dirpath, dirname){
 
 module.exports = {
     writeFileFromForm: function(filePath, file) {
-        filePath = 'src/assets/' + filePath;
-        if (filePath.lastIndexOf('/') != filePath.length - 1) {
-            filePath += '/';
+        if (filePath) {
+            filePath = 'src/assets/' + filePath;
+            if (filePath.lastIndexOf('/') != filePath.length - 1) {
+                filePath += '/';
+            }
+            mkdirs(filePath);
+        } else {
+            filePath = 'src/assets/';
         }
-        mkdirs(filePath);
         fs.writeFile(decodeURI(filePath + file.name), fs.readFileSync(file.path));
         filePath = filePath.substring(3);
         return filePath + file.name;
@@ -48,7 +52,11 @@ module.exports = {
             filePath += '/';
         }
         mkdirs(filePath);
-        fs.writeFile(decodeURI(filePath + fileName), fileBuffer);
+        if (fs.existsSync(decodeURI(filePath + fileName))) {
+            fs.appendFileSync(decodeURI(filePath + fileName), fileBuffer);
+        } else {
+            fs.writeFileSync(decodeURI(filePath + fileName), fileBuffer);
+        }
         filePath = filePath.substring(3);
         return filePath + fileName;
     }

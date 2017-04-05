@@ -28,6 +28,7 @@
             $.ajax({
                 type: 'get',
                 url: '/assetsStruct' + path,
+                headers: {'user': 'admin', 'pwd': 'admin'},
                 dataType: 'json',
                 success: function(data) {
                     var prePath = path.substring(0, path.lastIndexOf('/'));
