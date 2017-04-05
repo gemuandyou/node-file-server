@@ -19,16 +19,16 @@ module.exports = [{
     handle: function (req, res, next) {
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
-            if (files && fields.filePath && files.file) {
+            if (files && files.file) { // fields.filePath &&
                 // 域名验证，允许跨域访问白名单
-                if ("http://192.168.1.154:1337" == req.headers["origin"]) {
+                // if ("http://192.168.1.110:6666" == req.headers["origin"]) {
                     var filePath = file.writeFileFromForm(fields.filePath, files.file);
                     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                    res.setHeader('Access-Control-Allow-Origin', '');
+                    res.setHeader('Access-Control-Allow-Origin', 'http://192.168.1.110:6666');
                     res.setHeader('Access-Control-Allow-Methods', 'POST');
                     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
                     res.write(filePath, 'utf-8');
-                }
+                // }
             }
             res.end();
         });
@@ -51,6 +51,7 @@ module.exports = [{
                 params[kv[0]] = kv[1];
             }
             var buffer = new Buffer(params['fileBuffer'], 'hex');
+
             var filePath = file.writeFile(decodeURI(params['filePath']), decodeURI(params['fileName']), buffer);
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
             res.write(filePath, 'utf-8');
@@ -61,8 +62,17 @@ module.exports = [{
     // 资源列表预览
     route: "/assetsStruct", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {
+        // 超简单的权限验证
+        var user = req.headers['user'];
+        var pwd = req.headers['pwd'];
+        if (user != 'admin' || pwd != 'admin') {
+            res.end();
+            return;
+        }
+
         var path = 'src/assets' + req.url;
         var stats = fs.statSync(decodeURI(path));
+
         if (stats.isDirectory()) {
             var files = getChildrenFile(decodeURI(path));
             if (files) {
