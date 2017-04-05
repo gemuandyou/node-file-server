@@ -4,6 +4,7 @@
 var gulp = require('gulp');
 var browserSync = require('browser-sync');
 var uri = require('./uri');
+
 gulp.task('server', function () {
     browserSync.init({
         browser: 'chrome',
