@@ -15,6 +15,7 @@ gulp.task('server', function () {
                 "/node_modules": "node_modules"
             },
             middleware: uri
-        }
+        },
+        cors: false
     });
 });

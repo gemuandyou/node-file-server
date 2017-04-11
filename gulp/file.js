@@ -40,11 +40,12 @@ module.exports = {
             }
             mkdirs(filePath);
         } else {
-            filePath = 'src/assets/';
+            filePath = 'src/assets/base/';
+            mkdirs(filePath);
         }
         fs.writeFile(decodeURI(filePath + file.name), fs.readFileSync(file.path));
         filePath = filePath.substring(3);
-        return filePath + file.name;
+        return path.join(filePath, file.name);
     },
     writeFile: function(filePath, fileName, fileBuffer) {
         if (filePath) {
@@ -54,7 +55,8 @@ module.exports = {
             }
             mkdirs(filePath);
         } else {
-            filePath = 'src/assets/';
+            filePath = 'src/assets/base/';
+            mkdirs(filePath);
         }
         if (fs.existsSync(decodeURI(filePath + fileName))) {
             fs.appendFileSync(decodeURI(filePath + fileName), fileBuffer);
@@ -62,6 +64,6 @@ module.exports = {
             fs.writeFileSync(decodeURI(filePath + fileName), fileBuffer);
         }
         filePath = filePath.substring(3);
-        return filePath + fileName;
+        return path.join(filePath, fileName);
     }
 };

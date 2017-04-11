@@ -13,22 +13,30 @@ var getChildrenFile = function(path) {
     }
 };
 
-module.exports = [{
+var whiteListDomain = ['127.0.0.1', 'http://localhost:3008']; // 白名单
+var concurrentNum = 10; // 最大下载并发数
+
+module.exports = [{ // 相当于拦截器，所有请求都会走这里
+    route: "",
+    handle: function(req, res, next) {
+        console.log(req.headers["origin"]);
+        // 域名验证，允许跨域访问白名单
+        if (!req.headers["origin"] || whiteListDomain.indexOf(req.headers["origin"]) !== -1) {
+            next();
+        } else {
+            res.end();
+            return;
+        }
+    }
+},{
     // 处理表单上传
     route: "/api/uploadForm/", // complete-route
     handle: function (req, res, next) {
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
             if (files && files.file) { // fields.filePath &&
-                // 域名验证，允许跨域访问白名单
-                // if ("http://192.168.1.110:6666" == req.headers["origin"]) {
-                    var filePath = file.writeFileFromForm(fields.filePath, files.file);
-                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                    res.setHeader('Access-Control-Allow-Origin', 'http://192.168.1.110:6666');
-                    res.setHeader('Access-Control-Allow-Methods', 'POST');
-                    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
-                    res.write(filePath, 'utf-8');
-                // }
+                var filePath = file.writeFileFromForm(fields.filePath, files.file);
+                res.write(filePath, 'utf-8');
             }
             res.end();
         });
@@ -62,22 +70,21 @@ module.exports = [{
     // 资源列表预览
     route: "/assetsStruct", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {
-        // 超简单的权限验证
-        var user = req.headers['user'];
-        var pwd = req.headers['pwd'];
-        if (user != 'admin' || pwd != 'admin') {
-            res.end();
-            return;
-        }
-
         var path = 'src/assets' + req.url;
         var stats = fs.statSync(decodeURI(path));
-
         if (stats.isDirectory()) {
             var files = getChildrenFile(decodeURI(path));
             if (files) {
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.write(JSON.stringify(files).toString())
+                var fileArr = [];
+                for (var index in files) {
+                    var file = files[index];
+                    var stats1 = fs.statSync(decodeURI(path) + '/' + file);
+                    var fileObj = {file: file};
+                    fileObj.isFile = stats1.isFile();
+                    fileArr.push(fileObj);
+                }
+                res.write(JSON.stringify(fileArr).toString());
             } else {
                 res.write(JSON.stringify("[]").toString());
             }
@@ -99,6 +106,13 @@ module.exports = [{
     // 资源下载
     route: "/download/assets", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {
+        if (concurrentNum <= 0) {
+            res.setHeader("Content-type", "application/json");
+            res.write("{'isBlocked':true}"); // 资源阻塞，下载失败
+            res.end();
+            return;
+        }
+        concurrentNum--;
         var path = req.url;
         var fileName = path.substring(path.lastIndexOf('/') + 1);
         var filePath = 'src/assets' + path;
@@ -111,6 +125,7 @@ module.exports = [{
                 res.write(chunk);
             });
             filestream.on('end', function() {
+                concurrentNum++;
                 res.end();
             });
         } else {
