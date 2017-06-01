@@ -13,13 +13,13 @@ var getChildrenFile = function(path) {
     }
 };
 
-var whiteListDomain = ['127.0.0.1', 'http://localhost:3008']; // 白名单
+var whiteListDomain = ['127.0.0.1', 'http://localhost:3008', 'http://localhost:3000']; // 白名单
 var concurrentNum = 10; // 最大下载并发数
 
 module.exports = [{ // 相当于拦截器，所有请求都会走这里
     route: "",
     handle: function(req, res, next) {
-        console.log(req.headers["origin"]);
+        //console.log(req.headers["origin"]);
         // 域名验证，允许跨域访问白名单
         if (!req.headers["origin"] || whiteListDomain.indexOf(req.headers["origin"]) !== -1) {
             next();

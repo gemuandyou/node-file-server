@@ -9,6 +9,9 @@ gulp.task('server', function () {
     browserSync.init({
         browser: 'chrome',
         port: '3008',
+        ui: {
+            port: 3002 // 设置Browser-sync UI界面的端口号
+        },
         server: {
             baseDir: 'src',
             routes: {
@@ -16,6 +19,6 @@ gulp.task('server', function () {
             },
             middleware: uri
         },
-        cors: false
+        cors: false // 是否允许跨域
     });
 });
