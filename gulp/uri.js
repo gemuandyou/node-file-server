@@ -30,7 +30,7 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
     }
 },{
     // 处理表单上传
-    route: "/api/uploadForm/", // complete-route
+    route: "/api/uploadForm", // complete-route
     handle: function (req, res, next) {
         var form = new formidable.IncomingForm();
         form.parse(req, function(err, fields, files) {
