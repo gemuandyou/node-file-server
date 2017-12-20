@@ -36,6 +36,7 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
         form.parse(req, function(err, fields, files) {
             if (files && files.file) { // fields.filePath &&
                 var filePath = file.writeFileFromForm(fields.filePath, files.file);
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
                 res.write(filePath, 'utf-8');
             }
             res.end();
