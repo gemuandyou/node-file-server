@@ -42,6 +42,11 @@
         .image-item {
             border-top: 1px solid gainsboro;
         }
+
+        .image-label {
+            color: white;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -177,14 +182,7 @@
         }
 
         var brower = function (e) {
-            var imgDoms = document.getElementsByClassName('image-list');
-            if (imgDoms && imgDoms.length > 0) {
-                for (var i = 0; i < imgDoms.length; i++) {
-                    var imgDom = imgDoms[i];
-                    document.body.removeChild(imgDom);
-                }
-                return;
-            }
+            if (clearBrower()) return;
             $.ajax({
                 type: 'get',
                 url: '/assetsStruct/freehand',
@@ -195,13 +193,36 @@
                         // window.open('/assets/freehand/' + data[0].file);
                         var appendHtml = '<div class="image-list">';
                         data.forEach(img => {
-                            appendHtml += '<div class="image-item"><img src="' + '/assets/freehand/' + img.file + '" width="100%"></div>';
+                            if (img.file === 'README.MD') return;
+                            appendHtml += '<div class="image-item"><img class="image-item-img" src="' + '/assets/freehand/' + img.file + 
+                                '" width="100%"><span class="image-label">' + img.file.substring(img.file.lastIndexOf('/') + 1) + '</span></div>';
                         });
                         appendHtml += '</div>';
                         document.getElementsByClassName('menu')[0].insertAdjacentHTML('afterend', appendHtml);
+                        var imgs = document.getElementsByClassName('image-item-img');
+                        for (var i = 0; i < imgs.length; i++) {
+                            imgs[i].addEventListener('click', (e) => {
+                                clearBrower();
+                                clearCanvas();
+                                var cvsImg = new Image();
+                                cvsImg.src = e.target.getAttribute('src');
+                                ctx.drawImage(cvsImg, 0, 0);
+                            })
+                        }
                     }
                 }
             });
+        }
+
+        var clearBrower = function() {
+            var imgDoms = document.getElementsByClassName('image-list');
+            if (imgDoms && imgDoms.length > 0) {
+                for (var i = 0; i < imgDoms.length; i++) {
+                    var imgDom = imgDoms[i];
+                    document.body.removeChild(imgDom);
+                }
+                return true;
+            }
         }
 
         cvsDom.addEventListener('mousedown', startFn);
