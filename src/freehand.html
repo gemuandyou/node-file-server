@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>画板</title>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        #freehand {
+            background-color: #353535;
+            float: left;
+        }
+
+        .btn {
+            font-size: .6rem;
+            padding: 0;
+        }
+
+        .btn-active {
+            color: gray;
+        }
+
+        .image-list {
+            position: absolute;
+            top: 1rem;
+            max-height: calc(100% - 1.5rem);
+            overflow: auto;
+            z-index: 10;
+            background-color: black;
+            width: 10%;
+        }
+
+        .image-item {
+            border-top: 1px solid gainsboro;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="menu">
+        <button class="btn btn-brower" style="position: absolute;">浏览</button>
+        <button class="btn btn-save" style="position: absolute; left: 2.5rem;">保存</button>
+        <button class="btn btn-clear" style="position: absolute; left: 5rem;">清空画布</button>
+        <button class="btn btn-eraser" style="position: absolute; left: 8.7rem;">橡皮擦</button>
+    </div>
+    <canvas id="freehand"></canvas>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script type="application/javascript">
+        var cvsDom = document.getElementById('freehand');
+        var body = document.body;
+        var ctx = cvsDom.getContext("2d");
+        var isErase = false; // 光标是否是橡皮檫（true），默认为画笔（False）
+        var starting = false;
+        cvsDom.setAttribute('width', body.offsetWidth);
+        cvsDom.setAttribute('height', body.offsetHeight);
+
+        // PC端鼠标事件函数
+        var startFn = function (e) {
+            e = window.event || e;
+            var target = e.target;
+            var mX = e.pageX - target.offsetLeft;
+            var mY = e.pageY - target.offsetTop;
+            if (isErase) {
+                ctx.clearRect(mX + 2, mY + 2, 10, 10);
+            } else {
+                ctx.beginPath(); // 开始起点
+                ctx.moveTo(mX, mY); // 开始移动
+                ctx.lineWidth = .5;
+            }
+            starting = true;
+        }
+        var moveFn = function (e) {
+            if (starting) {
+                e = window.event || e;
+                var target = e.target;
+                var lX = e.pageX - target.offsetLeft;
+                var lY = e.pageY - target.offsetTop;
+                if (isErase) {
+                    ctx.clearRect(lX + 2, lY + 2, 10, 10);
+                } else {
+                    ctx.lineTo(lX, lY); // 移动
+                    ctx.strokeStyle = '#ECECEC';
+                    ctx.stroke(); // 画线
+                }
+            }
+        }
+        var endFn = function (e) {
+            ctx.closePath(); // 结束点
+            starting = false;
+        }
+        var outFn = function (e) {
+            ctx.closePath(); // 结束点
+            starting = false;
+        }
+
+        // 移动端触摸事件函数
+        var tstartFn = function (e) {
+            // 取消移动端浏览器的“橡皮筋效果”
+            e.stopPropagation();
+            e.preventDefault();
+
+            var touch = e.touches.item(0);
+            var mX = touch.pageX;
+            var mY = touch.pageY;
+            if (isErase) {
+                ctx.clearRect(mX + 2, mY + 2, 10, 10);
+            } else {
+                ctx.beginPath(); // 开始起点
+                ctx.moveTo(mX, mY); // 开始移动
+                ctx.lineWidth = 1;
+            }
+            starting = true;
+        }
+        var tmoveFn = function (e) {
+            // 取消移动端浏览器的“橡皮筋效果”
+            e.stopPropagation();
+            e.preventDefault();
+
+            if (starting) {
+                var touch = e.touches.item(0);
+                var lX = touch.pageX;
+                var lY = touch.pageY;
+                if (isErase) {
+                    ctx.clearRect(lX + 2, lY + 2, 10, 10);
+                } else {
+                    ctx.lineTo(lX, lY); // 移动
+                    ctx.strokeStyle = '#ECECEC';
+                    ctx.stroke(); // 画线
+                }
+            }
+        }
+
+        var clearCanvas = function () {
+            var cvsDom = document.getElementsByTagName('canvas')[0];
+            var ctx = cvsDom.getContext('2d');
+            ctx.clearRect(0, 0, cvsDom.offsetWidth, cvsDom.offsetHeight);
+        }
+
+        var eraserCanvas = function (e) {
+            isErase = !isErase;
+            var eraserDom = e.target;
+            var originalClass = eraserDom.className;
+            if (isErase) {
+                eraserDom.className = originalClass + ' btn-active';
+            } else {
+                eraserDom.className = originalClass.substring(0, originalClass.length - 11);
+            }
+        }
+
+        var save = function (e) {
+            var name = prompt('输入图片名', '你不写我就用时间戳了啊');
+            name = name || new Date().getTime();
+            var cvsDom = document.getElementsByTagName('canvas')[0];
+            var imgBase64 = cvsDom.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
+            $.ajax({
+                type: 'post',
+                url: '/api/uploadbase64/',
+                data: {
+                    'fileBuffer': imgBase64,
+                    'filePath': 'freehand',
+                    'fileName': name + '.png'
+                },
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data);
+                }
+            });
+        }
+
+        var brower = function (e) {
+            var imgDoms = document.getElementsByClassName('image-list');
+            if (imgDoms && imgDoms.length > 0) {
+                for (var i = 0; i < imgDoms.length; i++) {
+                    var imgDom = imgDoms[i];
+                    document.body.removeChild(imgDom);
+                }
+                return;
+            }
+            $.ajax({
+                type: 'get',
+                url: '/assetsStruct/freehand',
+                // headers: {'user': 'admin', 'pwd': 'admin'},
+                dataType: 'json',
+                success: function (data) {
+                    if (data instanceof Array) {
+                        // window.open('/assets/freehand/' + data[0].file);
+                        var appendHtml = '<div class="image-list">';
+                        data.forEach(img => {
+                            appendHtml += '<div class="image-item"><img src="' + '/assets/freehand/' + img.file + '" width="100%"></div>';
+                        });
+                        appendHtml += '</div>';
+                        document.getElementsByClassName('menu')[0].insertAdjacentHTML('afterend', appendHtml);
+                    }
+                }
+            });
+        }
+
+        cvsDom.addEventListener('mousedown', startFn);
+        cvsDom.addEventListener('mousemove', moveFn);
+        cvsDom.addEventListener('mouseup', endFn);
+        cvsDom.addEventListener('mouseout', outFn);
+
+        cvsDom.addEventListener('touchstart', tstartFn, { passive: false }); // passive:false 选项取消移动端的橡皮筋效果
+        cvsDom.addEventListener('touchmove', tmoveFn, { passive: false });
+        cvsDom.addEventListener('touchcancel', endFn, { passive: false });
+        cvsDom.addEventListener('touchend', outFn, { passive: false });
+
+        document.getElementsByClassName('btn-brower')[0].addEventListener('click', brower);
+        document.getElementsByClassName('btn-save')[0].addEventListener('click', save);
+        document.getElementsByClassName('btn-clear')[0].addEventListener('click', clearCanvas);
+        document.getElementsByClassName('btn-eraser')[0].addEventListener('click', eraserCanvas);
+
+        // 监听Ctrl + S
+        document.addEventListener('keydown', (e) => {
+            var currKey = 0, e = e || event || window.event;
+            currKey = e.keyCode || e.which || e.charCode;
+            if (currKey == 83 && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                alert('save')
+                return false;
+            }
+        });
+    </script>
+</body>
+
+</html>

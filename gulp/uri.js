@@ -61,7 +61,30 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
             }
             var buffer = new Buffer(params['fileBuffer'], 'hex');
 
-            var filePath = file.writeFile(decodeURI(params['filePath']), decodeURI(params['fileName']), buffer);
+            var filePath = file.writeFile(decodeURIComponent(params['filePath']), decodeURIComponent(params['fileName']), buffer);
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.write(filePath, 'utf-8');
+            res.end();
+        });
+    }
+}, {
+    // 处理普通参数上传
+    route: "/api/uploadbase64/", // complete-route
+    handle: function (req, res, next) {
+        var body = [];
+        req.on('data', function(chunk){
+            body.push(chunk);
+        });
+        req.on('end', function(){
+            body = Buffer.concat(body).toString();
+            var parts = body.split('&');
+            var params = {};
+            for (var i in parts) {
+                var param = parts[i];
+                var kv = param.split('=');
+                params[kv[0]] = kv[1];
+            }
+            var filePath = file.writeBase64(decodeURIComponent(params['filePath']), decodeURIComponent(params['fileName']), decodeURIComponent(params['fileBuffer']));
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
             res.write(filePath, 'utf-8');
             res.end();
@@ -72,15 +95,15 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
     route: "/assetsStruct", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {
         var path = 'src/assets' + req.url;
-        var stats = fs.statSync(decodeURI(path));
+        var stats = fs.statSync(decodeURIComponent(path));
         if (stats.isDirectory()) {
-            var files = getChildrenFile(decodeURI(path));
+            var files = getChildrenFile(decodeURIComponent(path));
             if (files) {
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 var fileArr = [];
                 for (var index in files) {
                     var file = files[index];
-                    var stats1 = fs.statSync(decodeURI(path) + '/' + file);
+                    var stats1 = fs.statSync(decodeURIComponent(path) + '/' + file);
                     var fileObj = {file: file};
                     fileObj.isFile = stats1.isFile();
                     fileArr.push(fileObj);
@@ -117,11 +140,11 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
         var path = req.url;
         var fileName = path.substring(path.lastIndexOf('/') + 1);
         var filePath = 'src/assets' + path;
-        var stats = fs.statSync(decodeURI(filePath));
+        var stats = fs.statSync(decodeURIComponent(filePath));
         if (stats.isFile()) {
             res.setHeader("Content-type", "application/octet-stream");
             res.setHeader("Content-Disposition", "attachment;filename="+encodeURI(fileName));
-            var filestream = fs.createReadStream(decodeURI(filePath));
+            var filestream = fs.createReadStream(decodeURIComponent(filePath));
             filestream.on('data', function(chunk) {
                 res.write(chunk);
             });

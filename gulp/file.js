@@ -43,7 +43,7 @@ module.exports = {
             filePath = 'src/assets/base/';
             mkdirs(filePath);
         }
-        fs.writeFile(decodeURI(filePath + file.name), fs.readFileSync(file.path));
+        fs.writeFile(decodeURIComponent(filePath + file.name), fs.readFileSync(file.path));
         filePath = filePath.substring(3);
         return path.join(filePath, file.name);
     },
@@ -58,11 +58,26 @@ module.exports = {
             filePath = 'src/assets/base/';
             mkdirs(filePath);
         }
-        if (fs.existsSync(decodeURI(filePath + fileName))) {
-            fs.appendFileSync(decodeURI(filePath + fileName), fileBuffer);
+        if (fs.existsSync(decodeURIComponent(filePath + fileName))) {
+            fs.appendFileSync(decodeURIComponent(filePath + fileName), fileBuffer);
         } else {
-            fs.writeFileSync(decodeURI(filePath + fileName), fileBuffer);
+            fs.writeFileSync(decodeURIComponent(filePath + fileName), fileBuffer);
         }
+        filePath = filePath.substring(3);
+        return path.join(filePath, fileName);
+    },
+    writeBase64: function(filePath, fileName, base64Str) {
+        if (filePath) {
+            filePath = 'src/assets/' + filePath;
+            if (filePath.lastIndexOf('/') != filePath.length - 1) {
+                filePath += '/';
+            }
+            mkdirs(filePath);
+        } else {
+            filePath = 'src/assets/base/';
+            mkdirs(filePath);
+        }
+        fs.writeFileSync(decodeURIComponent(filePath + fileName), base64Str, 'base64');
         filePath = filePath.substring(3);
         return path.join(filePath, fileName);
     }

@@ -30,7 +30,8 @@
                 url: '/assetsStruct' + path,
                 headers: {'user': 'admin', 'pwd': 'admin'},
                 dataType: 'json',
-                success: function(data) {var prePath = path.substring(0, path.lastIndexOf('/'));
+                success: function(data) {
+                    var prePath = path.substring(0, path.lastIndexOf('/'));
                     var trHtml = '<tr class="file-tr" onclick="getStruct(\'' + prePath + '\')"><td class="col-md-12"><a href="javascript:;">上级目录</a></td></tr>';
                     if (data instanceof Array) {
                         for (var i = 0; data && i < data.length; i++) {
