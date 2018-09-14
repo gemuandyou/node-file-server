@@ -40,12 +40,16 @@
         }
 
         .image-item {
-            border-top: 1px solid gainsboro;
+            border-bottom: 1px solid gainsboro;
+            position: relative;
         }
 
         .image-label {
             color: white;
             font-size: 0.8rem;
+            position: absolute;
+            left: 0;
+            bottom: 0;
         }
     </style>
 </head>
@@ -65,6 +69,7 @@
         var ctx = cvsDom.getContext("2d");
         var isErase = false; // 光标是否是橡皮檫（true），默认为画笔（False）
         var starting = false;
+        var currentFile = '';
         cvsDom.setAttribute('width', body.offsetWidth);
         cvsDom.setAttribute('height', body.offsetHeight);
 
@@ -162,7 +167,7 @@
         }
 
         var save = function (e) {
-            var name = prompt('输入图片名', '你不写我就用时间戳了啊');
+            var name = prompt('输入图片名', currentFile ? currentFile : '你不写我就用时间戳了啊');
             name = name || new Date().getTime();
             var cvsDom = document.getElementsByTagName('canvas')[0];
             var imgBase64 = cvsDom.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
@@ -205,8 +210,10 @@
                                 clearBrower();
                                 clearCanvas();
                                 var cvsImg = new Image();
-                                cvsImg.src = e.target.getAttribute('src');
+                                var path = e.target.getAttribute('src');
+                                cvsImg.src = path;
                                 ctx.drawImage(cvsImg, 0, 0);
+                                currentFile = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
                             })
                         }
                     }
