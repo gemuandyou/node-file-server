@@ -36,7 +36,7 @@
             overflow: auto;
             z-index: 10;
             background-color: black;
-            width: 10%;
+            width: 20%;
         }
 
         .image-item {
@@ -191,14 +191,23 @@
             name = name || new Date().getTime();
             var cvsDom = document.getElementsByTagName('canvas')[0];
             var imgBase64 = cvsDom.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
+            imgBase64 = window.atob(imgBase64);
+
+            var array = [];
+            for(var i = 0; i < imgBase64.length; i++){
+                array.push(imgBase64.charCodeAt(i));
+            }
+            var blob = new Blob([new Uint8Array(array)], { type: "image/png" });
+            var formdata = new FormData();
+            formdata.append('file', blob, name + '.png');
+            formdata.append('filePath', 'freehand');
+
             $.ajax({
                 type: 'post',
                 url: '/api/uploadbase64/',
-                data: {
-                    'fileBuffer': imgBase64,
-                    'filePath': 'freehand',
-                    'fileName': name + '.png'
-                },
+                data: formdata,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
                 success: function (data) {
                     console.log(data);
@@ -230,7 +239,7 @@
                             appendHtml);
                         var imgs = document.getElementsByClassName('image-item-img');
                         for (var i = 0; i < imgs.length; i++) {
-                            ['click', 'touchstart'].forEach(eventName => {
+                            ['click', 'singleTap'].forEach(eventName => {
                                 imgs[i].addEventListener(eventName, (e) => {
                                     clearBrower();
                                     clearCanvas();
@@ -238,6 +247,8 @@
                                     var path = e.target.getAttribute('src');
                                     cvsImg.src = path;
                                     cvsImg.onload = function () {
+                                        cvsDom.setAttribute('width', cvsImg.width);
+                                        cvsDom.setAttribute('height', cvsImg.height);
                                         ctx.drawImage(cvsImg, 0, 0);
                                     };
                                     currentFile = path.substring(path.lastIndexOf('/') +
@@ -272,7 +283,6 @@
             e.preventDefault();
 
             if (isScroll) {
-
                 setTimeout(() => {
                     isBlock = true;
                 }, 200);
@@ -292,11 +302,11 @@
                 if (appendX > 0 && appendY > 0) { // 左上移动
                     if (originalTop === parseInt(originalHeight - body.offsetHeight)) {
                         cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
-                        imgPos[1] = -1 * appendY;
+                        imgPos[1] = 0;
                     }
                     if (originalLeft === parseInt(originalWidth - body.offsetWidth)) {
                         cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
-                        imgPos[0] = -1 * appendX;
+                        imgPos[0] = 0;
                     }
                 } else if (appendX < 0 && appendY > 0) { // 右上移动
                     if (originalTop === parseInt(originalHeight - body.offsetHeight)) {
@@ -336,7 +346,7 @@
             }
         }
 
-        var gestureendFn = function(e) {
+        var gestureendFn = function (e) {
             e.preventDefault();
             isScroll = false;
             originalPos = [0, 0];

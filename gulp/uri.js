@@ -13,7 +13,7 @@ var getChildrenFile = function(path) {
     }
 };
 
-var whiteListDomain = ['127.0.0.1', 'http://localhost:3008', 'http://localhost:3000']; // 白名单
+var whiteListDomain = ['127.0.0.1', 'http://localhost:3008', 'http://localhost:3000', 'http://192.168.3.51:3008']; // 白名单
 var concurrentNum = 10; // 最大下载并发数
 
 module.exports = [{ // 相当于拦截器，所有请求都会走这里
@@ -71,6 +71,18 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
     // 处理普通参数上传
     route: "/api/uploadbase64/", // complete-route
     handle: function (req, res, next) {
+        var form = new formidable.IncomingForm();
+        form.parse(req, function(err, fields, files) {
+            var filePath = file.writeBase64(decodeURIComponent(fields['filePath']), decodeURIComponent(files['file']['name']), files['file']);
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.write(filePath, 'utf-8');
+            res.end();
+        });
+    }
+}, {
+    // 处理普通参数上传
+    route: "/api/uploadbase64Str/", // complete-route
+    handle: function (req, res, next) {
         var body = [];
         req.on('data', function(chunk){
             body.push(chunk);
@@ -84,7 +96,7 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
                 var kv = param.split('=');
                 params[kv[0]] = kv[1];
             }
-            var filePath = file.writeBase64(decodeURIComponent(params['filePath']), decodeURIComponent(params['fileName']), decodeURIComponent(params['fileBuffer']));
+            var filePath = file.writeBase64Str(decodeURIComponent(params['filePath']), decodeURIComponent(params['fileName']), decodeURIComponent(params['fileBuffer']));
             res.setHeader('Content-Type', 'text/plain; charset=utf-8');
             res.write(filePath, 'utf-8');
             res.end();

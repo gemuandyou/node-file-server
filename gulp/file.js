@@ -66,7 +66,22 @@ module.exports = {
         filePath = filePath.substring(3);
         return path.join(filePath, fileName);
     },
-    writeBase64: function(filePath, fileName, base64Str) {
+    writeBase64: function(filePath, fileName, file) {
+        if (filePath) {
+            filePath = 'src/assets/' + filePath;
+            if (filePath.lastIndexOf('/') != filePath.length - 1) {
+                filePath += '/';
+            }
+            mkdirs(filePath);
+        } else {
+            filePath = 'src/assets/base/';
+            mkdirs(filePath);
+        }
+        fs.writeFileSync(decodeURIComponent(filePath + fileName), fs.readFileSync(file.path));
+        filePath = filePath.substring(3);
+        return path.join(filePath, fileName);
+    },
+    writeBase64Str: function(filePath, fileName, base64Str) {
         if (filePath) {
             filePath = 'src/assets/' + filePath;
             if (filePath.lastIndexOf('/') != filePath.length - 1) {
