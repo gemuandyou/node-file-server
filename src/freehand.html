@@ -51,6 +51,13 @@
             left: 0;
             bottom: 0;
         }
+
+        .canvas {
+            clear: both;
+            overflow: auto;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
@@ -61,7 +68,9 @@
         <button class="btn btn-clear" style="position: absolute; left: 5rem;">清空画布</button>
         <button class="btn btn-eraser" style="position: absolute; left: 8.7rem;">橡皮擦</button>
     </div>
-    <canvas id="freehand"></canvas>
+    <div class="canvas">
+        <canvas id="freehand"></canvas>
+    </div>
     <script src="node_modules/jquery/dist/jquery.js"></script>
     <script type="application/javascript">
         var cvsDom = document.getElementById('freehand');
@@ -70,6 +79,9 @@
         var isErase = false; // 光标是否是橡皮檫（true），默认为画笔（False）
         var starting = false;
         var currentFile = '';
+        var isBlock = false;
+        var isScroll = false;
+        var originalPos = [0, 0];
         cvsDom.setAttribute('width', body.offsetWidth);
         cvsDom.setAttribute('height', body.offsetHeight);
 
@@ -118,9 +130,12 @@
             e.stopPropagation();
             e.preventDefault();
 
+            var scrollTop = document.getElementsByClassName('canvas')[0].scrollTop;
+            var scrollLeft = document.getElementsByClassName('canvas')[0].scrollLeft;
+
             var touch = e.touches.item(0);
-            var mX = touch.pageX;
-            var mY = touch.pageY;
+            var mX = touch.pageX + scrollLeft;
+            var mY = touch.pageY + scrollTop;
             if (isErase) {
                 ctx.clearRect(mX + 2, mY + 2, 10, 10);
             } else {
@@ -135,10 +150,15 @@
             e.stopPropagation();
             e.preventDefault();
 
+            var scrollTop = document.getElementsByClassName('canvas')[0].scrollTop;
+            var scrollLeft = document.getElementsByClassName('canvas')[0].scrollLeft;
+
+            if (isScroll) return;
+
             if (starting) {
                 var touch = e.touches.item(0);
-                var lX = touch.pageX;
-                var lY = touch.pageY;
+                var lX = touch.pageX + scrollLeft;
+                var lY = touch.pageY + scrollTop;
                 if (isErase) {
                     ctx.clearRect(lX + 2, lY + 2, 10, 10);
                 } else {
@@ -199,29 +219,38 @@
                         var appendHtml = '<div class="image-list">';
                         data.forEach(img => {
                             if (img.file === 'README.MD') return;
-                            appendHtml += '<div class="image-item"><img class="image-item-img" src="' + '/assets/freehand/' + img.file + 
-                                '" width="100%"><span class="image-label">' + img.file.substring(img.file.lastIndexOf('/') + 1) + '</span></div>';
+                            appendHtml +=
+                                '<div class="image-item"><img class="image-item-img" src="' +
+                                '/assets/freehand/' + img.file +
+                                '" width="100%"><span class="image-label">' + img.file.substring(
+                                    img.file.lastIndexOf('/') + 1) + '</span></div>';
                         });
                         appendHtml += '</div>';
-                        document.getElementsByClassName('menu')[0].insertAdjacentHTML('afterend', appendHtml);
+                        document.getElementsByClassName('menu')[0].insertAdjacentHTML('afterend',
+                            appendHtml);
                         var imgs = document.getElementsByClassName('image-item-img');
                         for (var i = 0; i < imgs.length; i++) {
-                            imgs[i].addEventListener('click', (e) => {
-                                clearBrower();
-                                clearCanvas();
-                                var cvsImg = new Image();
-                                var path = e.target.getAttribute('src');
-                                cvsImg.src = path;
-                                ctx.drawImage(cvsImg, 0, 0);
-                                currentFile = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
-                            })
+                            ['click', 'touchstart'].forEach(eventName => {
+                                imgs[i].addEventListener(eventName, (e) => {
+                                    clearBrower();
+                                    clearCanvas();
+                                    var cvsImg = new Image();
+                                    var path = e.target.getAttribute('src');
+                                    cvsImg.src = path;
+                                    cvsImg.onload = function () {
+                                        ctx.drawImage(cvsImg, 0, 0);
+                                    };
+                                    currentFile = path.substring(path.lastIndexOf('/') +
+                                        1, path.lastIndexOf('.'));
+                                })
+                            });
                         }
                     }
                 }
             });
         }
 
-        var clearBrower = function() {
+        var clearBrower = function () {
             var imgDoms = document.getElementsByClassName('image-list');
             if (imgDoms && imgDoms.length > 0) {
                 for (var i = 0; i < imgDoms.length; i++) {
@@ -232,15 +261,113 @@
             }
         }
 
+        var gesturestartFn = function (e) {
+            e.preventDefault();
+            isScroll = true;
+            originalPos[0] = e.layerX;
+            originalPos[1] = e.layerY;
+        }
+
+        var gesturechangeFn = function (e) {
+            e.preventDefault();
+
+            if (isScroll) {
+
+                setTimeout(() => {
+                    isBlock = true;
+                }, 200);
+                isBlock = false;
+                var appendX = body.offsetWidth / 60 * (e.layerX - originalPos[0] > 0 ? -1 : 1);
+                var appendY = body.offsetHeight / 45 * (e.layerY - originalPos[1] > 0 ? -1 : 1);
+                var originalWidth = cvsDom.getAttribute('width');
+                var originalHeight = cvsDom.getAttribute('height');
+
+                var imgData = ctx.getImageData(0, 0, originalWidth, originalHeight);
+
+                var originalTop = document.getElementsByClassName('canvas')[0].scrollTop;
+                var originalLeft = document.getElementsByClassName('canvas')[0].scrollLeft;
+
+                imgPos = [0, 0];
+
+                if (appendX > 0 && appendY > 0) { // 左上移动
+                    if (originalTop === parseInt(originalHeight - body.offsetHeight)) {
+                        cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
+                        imgPos[1] = -1 * appendY;
+                    }
+                    if (originalLeft === parseInt(originalWidth - body.offsetWidth)) {
+                        cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
+                        imgPos[0] = -1 * appendX;
+                    }
+                } else if (appendX < 0 && appendY > 0) { // 右上移动
+                    if (originalTop === parseInt(originalHeight - body.offsetHeight)) {
+                        cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
+                        imgPos[1] = -1 * appendY;
+                    }
+                    if (originalLeft === 0) {
+                        cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
+                        imgPos[0] = -1 * appendX;
+                    }
+                } else if (appendX > 0 && appendY < 0) { // 左下移动
+                    if (originalTop === 0) {
+                        cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
+                        imgPos[1] = -1 * appendY;
+                    }
+                    if (originalLeft === parseInt(originalWidth - body.offsetWidth)) {
+                        cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
+                        imgPos[0] = -1 * appendX;
+                    }
+                } else if (appendX < 0 && appendY < 0) { // 右下移动
+                    if (originalTop === 0) {
+                        cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
+                        imgPos[1] = -1 * appendY;
+                    }
+                    if (originalLeft === 0) {
+                        cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
+                        imgPos[0] = -1 * appendX;
+                    }
+                }
+
+                ctx.putImageData(imgData, imgPos[0], imgPos[1]);
+
+                document.getElementsByClassName('canvas')[0].scrollTop += appendY;
+                document.getElementsByClassName('canvas')[0].scrollLeft += appendX;
+
+                return;
+            }
+        }
+
+        var gestureendFn = function(e) {
+            e.preventDefault();
+            isScroll = false;
+            originalPos = [0, 0];
+        }
+
         cvsDom.addEventListener('mousedown', startFn);
         cvsDom.addEventListener('mousemove', moveFn);
         cvsDom.addEventListener('mouseup', endFn);
         cvsDom.addEventListener('mouseout', outFn);
 
-        cvsDom.addEventListener('touchstart', tstartFn, { passive: false }); // passive:false 选项取消移动端的橡皮筋效果
-        cvsDom.addEventListener('touchmove', tmoveFn, { passive: false });
-        cvsDom.addEventListener('touchcancel', endFn, { passive: false });
-        cvsDom.addEventListener('touchend', outFn, { passive: false });
+        cvsDom.addEventListener('touchstart', tstartFn, {
+            passive: false
+        }); // passive:false 选项取消移动端的橡皮筋效果
+        cvsDom.addEventListener('touchmove', tmoveFn, {
+            passive: false
+        });
+        cvsDom.addEventListener('touchcancel', endFn, {
+            passive: false
+        });
+        cvsDom.addEventListener('touchend', outFn, {
+            passive: false
+        });
+
+        // 当一个手指已经按在屏幕上，而另一个手指又触摸在屏幕时触发
+        cvsDom.addEventListener('gesturestart', gesturestartFn);
+        // 当触摸屏幕的任何一个手指的位置发生变化时触发。
+        cvsDom.addEventListener('gesturechange', gesturechangeFn);
+        // 当任何一个手指从屏幕上面移开时触发。
+        cvsDom.addEventListener('gestureend', gestureendFn);
+        // 滚动触发，或者双指放大缩小
+        cvsDom.addEventListener('mousewheel', (e) => { e.preventDefault(); });
 
         document.getElementsByClassName('btn-brower')[0].addEventListener('click', brower);
         document.getElementsByClassName('btn-save')[0].addEventListener('click', save);
@@ -249,12 +376,12 @@
 
         // 监听Ctrl + S
         document.addEventListener('keydown', (e) => {
-            var currKey = 0, e = e || event || window.event;
+            var currKey = 0,
+                e = e || event || window.event;
             currKey = e.keyCode || e.which || e.charCode;
             if (currKey == 83 && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
-                alert('save')
-                return false;
+                return;
             }
         });
     </script>
