@@ -311,7 +311,7 @@
                 } else if (appendX < 0 && appendY > 0) { // 右上移动
                     if (originalTop === parseInt(originalHeight - body.offsetHeight)) {
                         cvsDom.setAttribute('height', parseFloat(originalHeight) + Math.abs(appendY));
-                        imgPos[1] = -1 * appendY;
+                        imgPos[1] = 0;
                     }
                     if (originalLeft === 0) {
                         cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
@@ -324,7 +324,7 @@
                     }
                     if (originalLeft === parseInt(originalWidth - body.offsetWidth)) {
                         cvsDom.setAttribute('width', parseFloat(originalWidth) + Math.abs(appendX));
-                        imgPos[0] = -1 * appendX;
+                        imgPos[0] = 0;
                     }
                 } else if (appendX < 0 && appendY < 0) { // 右下移动
                     if (originalTop === 0) {
