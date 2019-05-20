@@ -29,6 +29,12 @@
             color: gray;
         }
 
+        .btn-fullscreen {
+            padding: 0;
+            color: gray;
+            cursor: zoom-in;
+        }
+
         .image-list {
             position: absolute;
             top: 1rem;
@@ -67,6 +73,7 @@
         <button class="btn btn-save" style="position: absolute; left: 2.5rem;">保存</button>
         <button class="btn btn-clear" style="position: absolute; left: 5rem;">清空画布</button>
         <button class="btn btn-eraser" style="position: absolute; left: 8.7rem;">橡皮擦</button>
+        <span class="btn-fullscreen" style="position: fixed; right: 0;">大</span>
     </div>
     <div class="canvas">
         <canvas id="freehand"></canvas>
@@ -194,10 +201,12 @@
             imgBase64 = window.atob(imgBase64);
 
             var array = [];
-            for(var i = 0; i < imgBase64.length; i++){
+            for (var i = 0; i < imgBase64.length; i++) {
                 array.push(imgBase64.charCodeAt(i));
             }
-            var blob = new Blob([new Uint8Array(array)], { type: "image/png" });
+            var blob = new Blob([new Uint8Array(array)], {
+                type: "image/png"
+            });
             var formdata = new FormData();
             formdata.append('file', blob, name + '.png');
             formdata.append('filePath', 'freehand');
@@ -231,7 +240,8 @@
                             appendHtml +=
                                 '<div class="image-item"><img class="image-item-img" src="' +
                                 '/assets/freehand/' + img.file +
-                                '" width="100%"><span class="image-label">' + img.file.substring(
+                                '" width="100%"><span class="image-label">' + img.file
+                                .substring(
                                     img.file.lastIndexOf('/') + 1) + '</span></div>';
                         });
                         appendHtml += '</div>';
@@ -248,7 +258,8 @@
                                     cvsImg.src = path;
                                     cvsImg.onload = function () {
                                         cvsDom.setAttribute('width', cvsImg.width);
-                                        cvsDom.setAttribute('height', cvsImg.height);
+                                        cvsDom.setAttribute('height', cvsImg
+                                            .height);
                                         ctx.drawImage(cvsImg, 0, 0);
                                     };
                                     currentFile = path.substring(path.lastIndexOf('/') +
@@ -377,7 +388,9 @@
         // 当任何一个手指从屏幕上面移开时触发。
         cvsDom.addEventListener('gestureend', gestureendFn);
         // 滚动触发，或者双指放大缩小
-        cvsDom.addEventListener('mousewheel', (e) => { e.preventDefault(); });
+        cvsDom.addEventListener('mousewheel', (e) => {
+            e.preventDefault();
+        });
 
         document.getElementsByClassName('btn-brower')[0].addEventListener('click', brower);
         document.getElementsByClassName('btn-save')[0].addEventListener('click', save);
@@ -394,6 +407,79 @@
                 return;
             }
         });
+
+        /**
+         * 全屏
+         */
+
+        var fullScreen = function (targetEle) {
+            var docEle = document.documentElement;
+
+            // W3C
+            if (docEle.requestFullScreen) {
+                docEle.requestFullScreen();
+            }
+
+            // FireFox
+            if (docEle.mozRequestFullScreen) {
+                docEle.mozRequestFullScreen();
+            }
+
+            // Chrome
+            if (docEle.webkitRequestFullScreen) {
+                docEle.webkitRequestFullScreen();
+            }
+
+            // IE11
+            if (docEle.msRequestFullScreen) {
+                // TODO 暂不支持
+                docEle.msRequestFullScreen();
+            }
+            
+            targetEle.style.cursor = 'zoom-out';
+            targetEle.textContent = '小';
+        }
+
+        var cancelFullScreen = function (targetEle) {
+            // W3C
+            if (document.exitFullScreen) {
+                document.exitFullScreen();
+            }
+
+            // FireFox
+            if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            }
+
+            // Chrome
+            if (document.webkitCancelFullScreen) {
+                document.webkitCancelFullScreen();
+            }
+
+            // IE11
+            if (document.msExitFullScreen) {
+                // TODO 暂不支持低版本IE
+                document.msExitFullScreen();
+            }
+            
+            targetEle.style.cursor = 'zoom-in';
+            targetEle.textContent = '大';
+        }
+
+
+        var fullScreenHander = function (ev) {
+            var targetEle = ev.target;
+
+            // 若已全屏取消全屏
+            if (document.fullscreen) {
+                cancelFullScreen(targetEle);
+            } else {
+                fullScreen(targetEle);
+            }
+            
+        }
+        
+        document.getElementsByClassName('btn-fullscreen')[0].addEventListener('click', fullScreenHander);
     </script>
 </body>
 
