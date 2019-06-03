@@ -132,6 +132,7 @@
         var outFn = function (e) {
             ctx.closePath(); // 结束点
             starting = false;
+            save(e, true); // 保存到临时文件
         }
 
         // 移动端触摸事件函数
