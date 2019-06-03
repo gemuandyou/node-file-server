@@ -179,7 +179,7 @@
             }
         }
 
-        var clearCanvas = function (e) {
+        var clearCanvasAndSave = function (e) {
             var clear = confirm('确认清空画布吗？');
             if (!clear) return;
             var cvsDom = document.getElementsByTagName('canvas')[0];
@@ -188,6 +188,12 @@
             cvsDom.setAttribute('width', body.offsetWidth);
             cvsDom.setAttribute('height', body.offsetHeight);
             save(e, true); // 保存到临时文件
+        }
+
+        var clearCanvas = function (e) {
+            var cvsDom = document.getElementsByTagName('canvas')[0];
+            var ctx = cvsDom.getContext('2d');
+            ctx.clearRect(0, 0, cvsDom.offsetWidth, cvsDom.offsetHeight);
         }
 
         var eraserCanvas = function (e) {
@@ -408,7 +414,7 @@
 
         document.getElementsByClassName('btn-brower')[0].addEventListener('click', brower);
         document.getElementsByClassName('btn-save')[0].addEventListener('click', (e) => { save(e, false); });
-        document.getElementsByClassName('btn-clear')[0].addEventListener('click', clearCanvas);
+        document.getElementsByClassName('btn-clear')[0].addEventListener('click', clearCanvasAndSave);
         document.getElementsByClassName('btn-eraser')[0].addEventListener('click', eraserCanvas);
         document.getElementsByClassName('btn-tmp')[0].addEventListener('click', (e) => { 
             currentFile = '/assets/freehand/_tmp.png';
