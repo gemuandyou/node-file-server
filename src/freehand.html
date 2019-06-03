@@ -69,7 +69,7 @@
 
 <body>
     <div class="menu">
-        <button class="btn btn-new" style="position: absolute;">新建</button>
+        <button class="btn btn-new" style="position: absolute;">临时</button>
         <button class="btn btn-brower" style="position: absolute; left: 2.5rem;">浏览</button>
         <button class="btn btn-save" style="position: absolute; left: 5rem;">保存</button>
         <button class="btn btn-clear" style="position: absolute; left: 7.5rem;">清空画布</button>
@@ -132,7 +132,6 @@
         var outFn = function (e) {
             ctx.closePath(); // 结束点
             starting = false;
-            save(e, true); // 保存到临时文件
         }
 
         // 移动端触摸事件函数
@@ -180,10 +179,13 @@
             }
         }
 
-        var clearCanvas = function () {
+        var clearCanvas = function (e) {
+            var clear = confirm('确认清空画布吗？');
+            if (!clear) return;
             var cvsDom = document.getElementsByTagName('canvas')[0];
             var ctx = cvsDom.getContext('2d');
             ctx.clearRect(0, 0, cvsDom.offsetWidth, cvsDom.offsetHeight);
+            save(e, true); // 保存到临时文件
         }
 
         var eraserCanvas = function (e) {
