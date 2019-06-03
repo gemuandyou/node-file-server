@@ -69,11 +69,12 @@
 
 <body>
     <div class="menu">
-        <button class="btn btn-brower" style="position: absolute;">浏览</button>
-        <button class="btn btn-save" style="position: absolute; left: 2.5rem;">保存</button>
-        <button class="btn btn-clear" style="position: absolute; left: 5rem;">清空画布</button>
-        <button class="btn btn-eraser" style="position: absolute; left: 8.7rem;">橡皮擦</button>
-        <span class="btn-fullscreen" style="position: fixed; right: 0;">大</span>
+        <button class="btn btn-new" style="position: absolute;">新建</button>
+        <button class="btn btn-brower" style="position: absolute; left: 2.5rem;">浏览</button>
+        <button class="btn btn-save" style="position: absolute; left: 5rem;">保存</button>
+        <button class="btn btn-clear" style="position: absolute; left: 7.5rem;">清空画布</button>
+        <button class="btn btn-eraser" style="position: absolute; left: 11.2rem;">橡皮擦</button>
+        <!-- <span class="btn-fullscreen" style="position: fixed; right: 0;">大</span> -->
     </div>
     <div class="canvas">
         <canvas id="freehand"></canvas>
@@ -85,7 +86,8 @@
         var ctx = cvsDom.getContext("2d");
         var isErase = false; // 光标是否是橡皮檫（true），默认为画笔（False）
         var starting = false;
-        var currentFile = '';
+        var currentFile = '/assets/freehand/_tmp.png';
+        var currentFileName = '';
         var isBlock = false;
         var isScroll = false;
         var originalPos = [0, 0];
@@ -125,10 +127,12 @@
         var endFn = function (e) {
             ctx.closePath(); // 结束点
             starting = false;
+            save(e, true); // 保存到临时文件
         }
         var outFn = function (e) {
             ctx.closePath(); // 结束点
             starting = false;
+            save(e, true); // 保存到临时文件
         }
 
         // 移动端触摸事件函数
@@ -193,9 +197,12 @@
             }
         }
 
-        var save = function (e) {
-            var name = prompt('输入图片名', currentFile ? currentFile : '你不写我就用时间戳了啊');
-            name = name || new Date().getTime();
+        var save = function (e, noPrompt) {
+            var name = currentFileName;
+            if (!noPrompt || !name) {
+                name = prompt('输入图片名', name ? name : '你不写我就用时间戳了啊');
+                name = name || new Date().getTime();
+            }
             var cvsDom = document.getElementsByTagName('canvas')[0];
             var imgBase64 = cvsDom.toDataURL('image/png').replace(/^data:image\/\w+;base64,/, '');
             imgBase64 = window.atob(imgBase64);
@@ -217,9 +224,9 @@
                 data: formdata,
                 processData: false,
                 contentType: false,
-                dataType: 'json',
-                success: function (data) {
-                    console.log(data);
+                dataType: 'text',
+                success: function (path) {
+                    currentFileName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));;
                 }
             });
         }
@@ -253,23 +260,26 @@
                                 imgs[i].addEventListener(eventName, (e) => {
                                     clearBrower();
                                     clearCanvas();
-                                    var cvsImg = new Image();
                                     var path = e.target.getAttribute('src');
-                                    cvsImg.src = path;
-                                    cvsImg.onload = function () {
-                                        cvsDom.setAttribute('width', cvsImg.width);
-                                        cvsDom.setAttribute('height', cvsImg
-                                            .height);
-                                        ctx.drawImage(cvsImg, 0, 0);
-                                    };
-                                    currentFile = path.substring(path.lastIndexOf('/') +
-                                        1, path.lastIndexOf('.'));
+                                    loadImg(path);
                                 })
                             });
                         }
                     }
                 }
             });
+        }
+
+        var loadImg = function(path) {
+            var cvsImg = new Image();
+            cvsImg.src = path;
+            cvsImg.onload = function () {
+                cvsDom.setAttribute('width', cvsImg.width);
+                cvsDom.setAttribute('height', cvsImg
+                    .height);
+                ctx.drawImage(cvsImg, 0, 0);
+            };
+            currentFileName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
         }
 
         var clearBrower = function () {
@@ -393,9 +403,13 @@
         });
 
         document.getElementsByClassName('btn-brower')[0].addEventListener('click', brower);
-        document.getElementsByClassName('btn-save')[0].addEventListener('click', save);
+        document.getElementsByClassName('btn-save')[0].addEventListener('click', (e) => { save(e, false); });
         document.getElementsByClassName('btn-clear')[0].addEventListener('click', clearCanvas);
         document.getElementsByClassName('btn-eraser')[0].addEventListener('click', eraserCanvas);
+        document.getElementsByClassName('btn-new')[0].addEventListener('click', (e) => { 
+            currentFile = '/assets/freehand/_tmp.png';
+            loadImg(currentFile); 
+        });
 
         // 监听Ctrl + S
         document.addEventListener('keydown', (e) => {
@@ -408,8 +422,10 @@
             }
         });
 
+        loadImg(currentFile);
+
         /**
-         * 全屏
+         * 全屏（目前已禁用）
          */
 
         var fullScreen = function (targetEle) {
