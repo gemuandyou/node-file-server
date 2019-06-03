@@ -103,6 +103,18 @@ module.exports = [{ // 相当于拦截器，所有请求都会走这里
         });
     }
 }, {
+    // 处理普通参数上传
+    route: "/api/delete/", // complete-route
+    handle: function (req, res, next) {
+        var form = new formidable.IncomingForm();
+        form.parse(req, function(err, fields, files) {
+            var isSuccess = file.rmFile(decodeURIComponent(fields['fileName']));
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.write(isSuccess, 'utf-8');
+            res.end();
+        });
+    }
+}, {
     // 资源列表预览
     route: "/assetsStruct", // fuzzy-route e.g. => /assets/../..
     handle: function (req, res, next) {

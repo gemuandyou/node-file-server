@@ -95,5 +95,15 @@ module.exports = {
         fs.writeFileSync(decodeURIComponent(filePath + fileName), base64Str, 'base64');
         filePath = filePath.substring(3);
         return path.join(filePath, fileName);
-    }
+    },
+    rmFile: function(fileName) {
+        if (!fileName) {
+            return false;
+        }
+        fileName = 'src/assets' + fileName;
+        if (fs.existsSync(decodeURIComponent(fileName))) {
+            fs.rmdirSync(decodeURIComponent(fileName));
+        }
+        return true;
+    },
 };

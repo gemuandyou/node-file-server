@@ -7,6 +7,9 @@
         .file-tr :hover {
             background-color: lightgray;
         }
+        .file-tr .op-btn {
+            cursor: default;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +40,8 @@
                         for (var i = 0; data && i < data.length; i++) {
                             var currPath = path + '/' + data[i].file;
                             if (data[i].isFile) {
-                                trHtml += '<tr class="file-tr"><td class="col-md-12"><a href="/assets' + currPath + '" target="_blank">' + data[i].file + '</a></td></tr>';
+                                trHtml += '<tr class="file-tr"><td class="col-md-12"><a href="/assets' + currPath + '" target="_blank">' + data[i].file + '</a></td>' + 
+                                    '<td class="op-btn" onclick="deleteFile(\'' + currPath + '\')">X</td></tr>';
                             } else {
                                 trHtml += '<tr class="file-tr" onclick="getStruct(\'' + currPath + '\')"><td class="col-md-12"><a href="javascript:;">' + data[i].file + '</a></td></tr>';
                             }
@@ -49,6 +53,26 @@
                 }
             });
         }
+
+        function deleteFile(fileName) {
+            var isConfirm = confirm('确认删除' + fileName + '吗？');
+            if (isConfirm) {
+                var formdata = new FormData();
+                formdata.append('fileName', fileName);
+                $.ajax({
+                    type: 'post',
+                    url: '/api/delete/',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'text',
+                    success: function (isSuccess) {
+                        alert(isSuccess ? '删除成功' : '删除失败');
+                    }
+                });
+            }
+        }
+
         getStruct("");
     </script>
 </body>
