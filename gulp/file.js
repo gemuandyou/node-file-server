@@ -3,6 +3,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 
 /**
  * node创建指定文件夹结构。递归创建文件夹
@@ -102,7 +103,9 @@ module.exports = {
         }
         fileName = 'src/assets' + fileName;
         if (fs.existsSync(decodeURIComponent(fileName))) {
-            fs.rmdirSync(decodeURIComponent(fileName));
+            assert.throws(function() {
+                fs.rmdirSync(decodeURIComponent(fileName));
+            });
         }
         return true;
     },
