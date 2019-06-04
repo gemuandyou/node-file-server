@@ -20,19 +20,44 @@
             float: left;
         }
 
+        .menu {
+            background-color: #818181;
+            position: absolute;
+            line-height: 1.3rem;
+            padding: 0 3px;
+        }
+
         .btn {
             font-size: .6rem;
             padding: 0;
+            color: white;
+            line-height: 1.3rem;
         }
 
         .btn-active {
-            color: gray;
+            color: yellow;
         }
 
         .btn-fullscreen {
             padding: 0;
             color: gray;
             cursor: zoom-in;
+        }
+
+        .color-box {
+            display: none;
+            position: fixed;
+        }
+
+        .color-box-ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .color-box-li {
+            width: 2rem;
+            height: 1rem;
         }
 
         .image-list {
@@ -69,18 +94,24 @@
 
 <body>
     <div class="menu">
-        <button class="btn btn-tmp" style="position: absolute;">临时</button>
-        <button class="btn btn-brower" style="position: absolute; left: 2.5rem;">浏览</button>
-        <button class="btn btn-save" style="position: absolute; left: 5rem;">保存</button>
-        <button class="btn btn-clear" style="position: absolute; left: 7.5rem;">清空画布</button>
-        <button class="btn btn-eraser" style="position: absolute; left: 11.2rem;">橡皮擦</button>
+        <span class="btn btn-tmp">临时</span>
+        <span class="btn btn-brower" style="left: 2.5rem;">浏览</span>
+        <span class="btn btn-save" style="left: 5rem;">保存</span>
+        <span class="btn btn-clear" style="left: 7.5rem;">清空画布</span>
+        <span class="btn btn-eraser" style="left: 11.2rem;">橡皮擦</span>
+        <span class="btn btn-color" style="left: 13.7rem;">字色</span>
         <!-- <span class="btn-fullscreen" style="position: fixed; right: 0;">大</span> -->
+        <div class="color-box"></div>
     </div>
     <div class="canvas">
         <canvas id="freehand"></canvas>
     </div>
     <script src="node_modules/jquery/dist/jquery.js"></script>
     <script type="application/javascript">
+        var options = {};
+        options.fontColors = ['red', 'yellow', '#888', 'green', 'purple', 'blue', 'pink'];
+
+        var strokeColor = options.fontColors[2]; // 画笔颜色
         var cvsDom = document.getElementById('freehand');
         var body = document.body;
         var ctx = cvsDom.getContext("2d");
@@ -93,6 +124,32 @@
         var originalPos = [0, 0];
         cvsDom.setAttribute('width', body.offsetWidth);
         cvsDom.setAttribute('height', body.offsetHeight);
+
+        var showColors = function(e) {
+            var pageX = e.pageX;
+            var pageY = e.pageY;
+            var colorBtnDom = document.getElementsByClassName('btn-color')[0];
+            var colorBoxDom = document.getElementsByClassName('color-box')[0];
+            var menuDom = document.getElementsByClassName('menu')[0];
+            colorBoxDom.style.top = menuDom.offsetHeight+ 'px';
+            colorBoxDom.style.left = colorBtnDom.offsetLeft + 'px';
+            colorBoxDom.style.display = 'inline-block';
+        }
+
+        var loadColorBox = function () {
+            var colorBoxHtml = '<ul class="color-box-ul">';
+            options.fontColors.forEach(color => {
+                colorBoxHtml += '<li class="color-box-li" style="background-color: ' + color + ';" onclick="chooseStrokeColor(\'' + color + '\');"></li>';
+            });
+            colorBoxHtml += '</ul>';
+            document.getElementsByClassName('color-box')[0].innerHTML = colorBoxHtml;
+        }
+
+        var chooseStrokeColor = function (color) {
+            strokeColor = color;
+            var colorBoxDom = document.getElementsByClassName('color-box')[0];
+            colorBoxDom.style.display = 'none';
+        }
 
         // PC端鼠标事件函数
         var startFn = function (e) {
@@ -119,7 +176,7 @@
                     ctx.clearRect(lX + 2, lY + 2, 10, 10);
                 } else {
                     ctx.lineTo(lX, lY); // 移动
-                    ctx.strokeStyle = '#888';
+                    ctx.strokeStyle = strokeColor;
                     ctx.stroke(); // 画线
                 }
             }
@@ -174,7 +231,7 @@
                     ctx.clearRect(lX + 2, lY + 2, 10, 10);
                 } else {
                     ctx.lineTo(lX, lY); // 移动
-                    ctx.strokeStyle = '#888';
+                    ctx.strokeStyle = strokeColor;
                     ctx.stroke(); // 画线
                 }
             }
@@ -421,6 +478,7 @@
             currentFile = '/assets/freehand/_tmp.png';
             loadImg(currentFile); 
         });
+        document.getElementsByClassName('btn-color')[0].addEventListener('click', showColors);
 
         // 监听Ctrl + S
         document.addEventListener('keydown', (e) => {
@@ -433,7 +491,12 @@
             }
         });
 
+        /*
+         * 初始化方法
+         */
+
         loadImg(currentFile);
+        loadColorBox();
 
         /**
          * 全屏（目前已禁用）
