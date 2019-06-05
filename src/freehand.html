@@ -377,7 +377,10 @@
             if (isScroll) {
                 setTimeout(() => {
                     isBlock = true;
-                }, 200);
+                }, 180);
+                if (!isBlock) {
+                    return;
+                }
                 isBlock = false;
                 var appendX = body.offsetWidth / 60 * (e.layerX - originalPos[0] > 0 ? -1 : 1);
                 var appendY = body.offsetHeight / 45 * (e.layerY - originalPos[1] > 0 ? -1 : 1);
