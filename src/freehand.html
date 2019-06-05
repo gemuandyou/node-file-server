@@ -269,6 +269,9 @@
             var name = currentFileName;
             if (!noPrompt || !name) {
                 name = prompt('输入图片名', name ? name : '你不写我就用时间戳了啊');
+                if (name === null) {
+                    return;
+                }
                 name = name || new Date().getTime();
             }
             var cvsDom = document.getElementsByTagName('canvas')[0];
